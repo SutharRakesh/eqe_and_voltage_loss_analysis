@@ -216,7 +216,7 @@ def main():
                                  yaxis='y1'))
 
         # Set y-axis title for interpolated EQE values
-        fig1.update_layout(yaxis=dict(title='Interpolated EQE', titlefont=dict(color='blue'), tickfont=dict(color='blue')))
+        fig1.update_layout(yaxis=dict(title='EQE (%)', titlefont=dict(color='blue'), tickfont=dict(color='blue')))
 
         # Add the second trace for cumulative sum on y2-axis
         fig1.add_trace(go.Scatter(x=am15_wavelength, y=cumulative_sum, mode='lines',
