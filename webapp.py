@@ -325,7 +325,7 @@ def main():
        # Show the plots side by side
         st.plotly_chart(fig1, use_container_width=True)
         st.plotly_chart(fig2, use_container_width=True)
-        st.write('****The orange color indicate the different loss.****')
+        st.write('The orange color bar indicates different component of voltage loss.')
 
 
         # Concatenate the results and the new data into a single DataFrame
