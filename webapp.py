@@ -24,7 +24,7 @@ footer:after{
 
 
 # Custom header content
-st.set_page_config(page_title='EQE and voltage loss analysis Calculator', page_icon='📈')
+st.set_page_config(page_title='EQE Voltage-loss Calculator', page_icon='📈')
 st.title("EQE-Jsc and Voltage-loss analysis calculator")
 st.markdown(
     """
