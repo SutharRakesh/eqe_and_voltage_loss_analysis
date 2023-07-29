@@ -8,7 +8,7 @@ import base64
 hide_menu = """
 <style>
 #MainMenu {
-    visibility:hidden;
+    visibility:visible;
 }
 footer{
     visibility:visible;
@@ -134,9 +134,9 @@ def main():
     # Input form for user to provide EQE, bandgap, and VOC values
     bandgap_eV = st.sidebar.number_input('Bandgap Energy (eV)', min_value=0.00, max_value=10.00, step=0.01, value=1.50)
     voc_voltage = st.sidebar.number_input('Voc Voltage (V)', min_value=0.00, max_value=10.00, step=0.001, value=0.800)
-    st.sidebar.write("Option 1: Paste the data as two columns (Wavelength, EQE) separated by commas or tabs:")
+    st.sidebar.write("Option 1: Paste the two data columns (Wavelength(nm), EQE(%) separated by commas or tabs:")
     direct_input = st.sidebar.text_area("Direct Input", value="", height=100)
-    uploaded_file = st.sidebar.file_uploader("Option 2: Upload your .csv file, Provide the full scan data 300-1000 nm", type=["csv"])
+    uploaded_file = st.sidebar.file_uploader("Option 2: Upload your .csv file, Provide two data columns (Wavelength(nm), EQE(%) in .csv", type=["csv"])
 
     eqe_data = None  # Initialize the data variable
     if uploaded_file is not None:
