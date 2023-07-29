@@ -144,7 +144,7 @@ def main():
         eqe_data = pd.read_csv(uploaded_file)
         # Automatically assign column names
         eqe_data.columns = ['Wavelength', 'EQE']  # You can change the column names if needed
-        st.write("Data loaded successfully.")
+        st.write("Data loaded successfully. Please use the light theme for better visualization")
     elif direct_input:
         # Convert direct input to a DataFrame
         eqe_data = pd.read_csv(StringIO(direct_input), sep='\t|,', engine='python', header=None)
