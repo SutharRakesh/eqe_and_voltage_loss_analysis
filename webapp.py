@@ -334,7 +334,7 @@ def main():
         # Download button to save all data (results + new data) as a single CSV
         csv_combined = combined_data.to_csv(index=False)
         b64_combined = base64.b64encode(csv_combined.encode()).decode()  # Convert DataFrame to base64
-        href_combined = f'<a href="data:file/csv;base64,{b64_combined}" download="EQE_Voltageloss.csv">Download All Data (Loss parameters, Wavelength, EQE and Integrated Jsc)</a>'
+        href_combined = f'<a href="data:file/csv;base64,{b64_combined}" download="EQE_Voltageloss_data.csv">Download All Data (Loss parameters, Wavelength, EQE and Integrated Jsc)</a>'
         st.markdown(href_combined, unsafe_allow_html=True)
 
 
