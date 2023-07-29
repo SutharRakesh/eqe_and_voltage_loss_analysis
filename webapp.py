@@ -18,12 +18,9 @@ footer:after{
     display:block;
     position:relative;
     color:blue;
-    padding:1px;
 }
 <style>
 """
-
-
 
 
 # Custom header content
@@ -40,9 +37,8 @@ st.markdown(
     """,
     unsafe_allow_html=True,
 )
-st.markdown(hide_menu, unsafe_allow_html=True)
 st.caption("App developed by [Rakesh Suthar, IIT Delhi](https://sites.google.com/view/rakeshiitd/home)")
-
+st.markdown(hide_menu, unsafe_allow_html=True)
 # Load AM1.5 data
 am15_data = pd.read_csv('AM15G.csv')
 am15_wavelength = am15_data['Wavelength']
