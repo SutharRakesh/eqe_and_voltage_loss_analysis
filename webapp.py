@@ -134,9 +134,9 @@ def main():
     # Input form for user to provide EQE, bandgap, and VOC values
     bandgap_eV = st.sidebar.number_input('Bandgap Energy (eV)', min_value=0.00, max_value=10.00, step=0.01, value=1.50)
     voc_voltage = st.sidebar.number_input('Voc Voltage (V)', min_value=0.00, max_value=10.00, step=0.001, value=0.800)
-    st.sidebar.write("Option 1: Paste the two data columns (Wavelength(nm), EQE(%) separated by commas or tabs:")
+    st.sidebar.write("Option 1: Paste the two data columns (Wavelength(nm), EQE(%)) separated by commas or tabs:")
     direct_input = st.sidebar.text_area("Direct Input", value="", height=100)
-    uploaded_file = st.sidebar.file_uploader("Option 2: Upload your .csv file, Provide two data columns (Wavelength(nm), EQE(%) in .csv", type=["csv"])
+    uploaded_file = st.sidebar.file_uploader("Option 2: Upload your .csv file, Provide two data columns (Wavelength(nm), EQE(%)) in .csv file", type=["csv"])
 
     eqe_data = None  # Initialize the data variable
     if uploaded_file is not None:
@@ -240,7 +240,7 @@ def main():
             xaxis_title='Wavelength (nm)',
             title='EQE and Integrated Jsc Curve',
             xaxis_range=[300, 1000],
-            xaxis=dict(title_font=dict(size=16, family='Arial, sans-serif', color='black'), tickfont = dict(size=17)),
+            xaxis=dict(title_font=dict(size=16, family='Arial, sans-serif', color='black'), tickfont = dict( color='black', size=17)),
             yaxis1=dict(title_font=dict(size=16, family='Arial, sans-serif', color='blue'), tickfont = dict(size=17)),
             yaxis2=dict(title_font=dict(size=16, family='Arial, sans-serif', color='red'), tickfont = dict(size=17)),
             plot_bgcolor='white',
@@ -274,7 +274,7 @@ def main():
                 marker=dict(color='blue'),
                 text=[f'{value:.3f} {unit}'],
                 textposition='inside',
-                textangle=-90,
+                textangle=-0,
             )
             bar_traces.append(bar_trace)
 
@@ -287,7 +287,7 @@ def main():
                 marker=dict(color='orange'),
                 text=[f'{difference:.3f} {unit}'],
                 textposition='inside',  
-                textangle=-90,
+                textangle=-00,
             )
             bar_traces.append(bar_trace)
 
