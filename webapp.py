@@ -38,7 +38,7 @@ st.markdown(
     unsafe_allow_html=True,
 )
 st.caption("App developed by [Rakesh Suthar, IIT Delhi](https://sites.google.com/view/rakeshiitd/home)")
-st.caption("Current app is now published at NANOHUB.ORG Please cite [Click here](https://nanohub.org/tools/pvparameters")
+st.caption("Current app is now published at NANOHUB.ORG Please cite [https://nanohub.org/tools/pvparameters]")
 st.markdown(hide_menu, unsafe_allow_html=True)
 # Load AM1.5 data
 am15_data = pd.read_csv('AM15G.csv')
