@@ -405,12 +405,54 @@ def eqe_on_grid(eqe: pd.DataFrame, wl: np.ndarray) -> np.ndarray:
 
 
 def calculate_jsc(spectrum: pd.DataFrame, eqe: pd.DataFrame) -> Dict:
-    wl = spectrum["Wavelength_nm"].to_numpy(float)
-    irr = spectrum["Irradiance_W_m2_nm"].to_numpy(float)
-    eqe_grid = eqe_on_grid(eqe, wl)
+    spectrum_wl = spectrum["Wavelength_nm"].to_numpy(float)
+    spectrum_irr = spectrum["Irradiance_W_m2_nm"].to_numpy(float)
+
+    eqe_wl = eqe["Wavelength_nm"].to_numpy(float)
+    eqe_fraction = eqe["EQE_fraction"].to_numpy(float)
+
+    # Use only the wavelength range where measured EQE
+    # and the illumination spectrum actually overlap.
+    wl_min = max(eqe_wl.min(), spectrum_wl.min())
+    wl_max = min(eqe_wl.max(), spectrum_wl.max())
+
+    if wl_max <= wl_min:
+        raise ValueError(
+            "The EQE wavelength range does not overlap the illumination spectrum."
+        )
+
+    # Build one common wavelength grid from both datasets.
+    # This preserves the user's measured endpoints and avoids extrapolation.
+    spectrum_points = spectrum_wl[
+        (spectrum_wl >= wl_min) & (spectrum_wl <= wl_max)
+    ]
+
+    eqe_points = eqe_wl[
+        (eqe_wl >= wl_min) & (eqe_wl <= wl_max)
+    ]
+
+    wl = np.unique(
+        np.concatenate(
+            [
+                [wl_min],
+                spectrum_points,
+                eqe_points,
+                [wl_max],
+            ]
+        )
+    )
+
+    # Interpolate only inside the validated overlap range.
+    irr = np.interp(wl, spectrum_wl, spectrum_irr)
+    eqe_grid = np.interp(wl, eqe_wl, eqe_fraction)
+
     e = energy_ev(wl)
 
+    # AM1.5G irradiance is W m^-2 nm^-1.
+    # Dividing by photon energy in eV and applying the 0.1 conversion
+    # gives integrated Jsc in mA/cm^2.
     integrand = eqe_grid * irr / e
+
     cumulative = 0.1 * cumtrapz_np(integrand, wl)
     jsc = float(cumulative[-1]) if len(cumulative) else 0.0
 
@@ -426,7 +468,13 @@ def calculate_jsc(spectrum: pd.DataFrame, eqe: pd.DataFrame) -> Dict:
         }
     )
 
-    return {"jsc": jsc, "processed": processed}
+    return {
+        "jsc": jsc,
+        "processed": processed,
+        "integration_min_nm": float(wl_min),
+        "integration_max_nm": float(wl_max),
+    }
+
 
 
 def calculate_sq_jsc(spectrum: pd.DataFrame, bandgap_ev: float, ideal_eqe_fraction: float = 1.0) -> float:
@@ -460,13 +508,43 @@ def calculate_voltage_loss(
     if not np.any(above_bg):
         raise ValueError("No PhiBB points above selected bandgap. Check Eg or PhiBB file.")
 
-    j0_sq = 1000 * Q * trapz_np(phi[above_bg], wl_bb[above_bg])
+    # PhiBB is expressed per eV, so integrate over photon energy, not wavelength.
+    e_sq = e_bb[above_bg]
+    phi_sq = phi[above_bg]
+
+    order = np.argsort(e_sq)
+    j0_sq = 1000 * Q * trapz_np(phi_sq[order], e_sq[order])
+
+
 
     if use_eqe_weighted_j0:
-        eqe_bb = eqe_on_grid(eqe, wl_bb)
-        j0_rad = 1000 * Q * trapz_np((eqe_bb * phi)[above_bg], wl_bb[above_bg])
+        # Voc_rad uses the measured EQE over its measured wavelength range.
+        # Do not extrapolate EQE and do not impose the Eg cutoff.
+        eqe_min = eqe["Wavelength_nm"].min()
+        eqe_max = eqe["Wavelength_nm"].max()
+
+        overlap = (wl_bb >= eqe_min) & (wl_bb <= eqe_max)
+        if not np.any(overlap):
+            raise ValueError("EQE and PhiBB wavelength ranges do not overlap.")
+
+        wl_rad = wl_bb[overlap]
+        e_rad = e_bb[overlap]
+        phi_rad = phi[overlap]
+
+        eqe_rad = np.interp(
+            wl_rad,
+            eqe["Wavelength_nm"].to_numpy(float),
+            eqe["EQE_fraction"].to_numpy(float),
+        )
+
+        # PhiBB is per eV, therefore integrate over photon energy.
+        order = np.argsort(e_rad)
+        j0_rad = 1000 * Q * trapz_np(
+            (eqe_rad * phi_rad)[order],
+            e_rad[order],
+        )
     else:
-        j0_rad = 1000 * Q * trapz_np(phi[above_bg], wl_bb[above_bg])
+        j0_rad = j0_sq
 
     j0_sq = max(j0_sq, 1e-300)
     j0_rad = max(j0_rad, 1e-300)
