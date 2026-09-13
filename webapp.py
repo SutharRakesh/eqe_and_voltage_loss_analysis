@@ -26,7 +26,7 @@ import numpy as np
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-
+from calculations import calculate_jsc
 
 APP_VERSION = "5.0"
 APP_DIR = Path(__file__).resolve().parent
@@ -40,7 +40,7 @@ HC_EV_NM = 1239.841984
 # Page setup
 # -----------------------------
 st.set_page_config(
-    page_title="PV Parameters Calculator",
+    page_title="EQE Jsc and Voltage-loss Calculator",
     page_icon="☀️",
     layout="wide",
     initial_sidebar_state="expanded",
@@ -404,77 +404,6 @@ def eqe_on_grid(eqe: pd.DataFrame, wl: np.ndarray) -> np.ndarray:
     )
 
 
-def calculate_jsc(spectrum: pd.DataFrame, eqe: pd.DataFrame) -> Dict:
-    spectrum_wl = spectrum["Wavelength_nm"].to_numpy(float)
-    spectrum_irr = spectrum["Irradiance_W_m2_nm"].to_numpy(float)
-
-    eqe_wl = eqe["Wavelength_nm"].to_numpy(float)
-    eqe_fraction = eqe["EQE_fraction"].to_numpy(float)
-
-    # Use only the wavelength range where measured EQE
-    # and the illumination spectrum actually overlap.
-    wl_min = max(eqe_wl.min(), spectrum_wl.min())
-    wl_max = min(eqe_wl.max(), spectrum_wl.max())
-
-    if wl_max <= wl_min:
-        raise ValueError(
-            "The EQE wavelength range does not overlap the illumination spectrum."
-        )
-
-    # Build one common wavelength grid from both datasets.
-    # This preserves the user's measured endpoints and avoids extrapolation.
-    spectrum_points = spectrum_wl[
-        (spectrum_wl >= wl_min) & (spectrum_wl <= wl_max)
-    ]
-
-    eqe_points = eqe_wl[
-        (eqe_wl >= wl_min) & (eqe_wl <= wl_max)
-    ]
-
-    wl = np.unique(
-        np.concatenate(
-            [
-                [wl_min],
-                spectrum_points,
-                eqe_points,
-                [wl_max],
-            ]
-        )
-    )
-
-    # Interpolate only inside the validated overlap range.
-    irr = np.interp(wl, spectrum_wl, spectrum_irr)
-    eqe_grid = np.interp(wl, eqe_wl, eqe_fraction)
-
-    e = energy_ev(wl)
-
-    # AM1.5G irradiance is W m^-2 nm^-1.
-    # Dividing by photon energy in eV and applying the 0.1 conversion
-    # gives integrated Jsc in mA/cm^2.
-    integrand = eqe_grid * irr / e
-
-    cumulative = 0.1 * cumtrapz_np(integrand, wl)
-    jsc = float(cumulative[-1]) if len(cumulative) else 0.0
-
-    processed = pd.DataFrame(
-        {
-            "Wavelength_nm": wl,
-            "Photon_energy_eV": e,
-            "Irradiance_W_m2_nm": irr,
-            "EQE_fraction": eqe_grid,
-            "EQE_percent": 100 * eqe_grid,
-            "Jsc_integrand": integrand,
-            "Cumulative_Jsc_mA_cm2": cumulative,
-        }
-    )
-
-    return {
-        "jsc": jsc,
-        "processed": processed,
-        "integration_min_nm": float(wl_min),
-        "integration_max_nm": float(wl_max),
-    }
-
 
 
 def calculate_sq_jsc(spectrum: pd.DataFrame, bandgap_ev: float, ideal_eqe_fraction: float = 1.0) -> float:
@@ -555,7 +484,7 @@ def calculate_voltage_loss(
 
     values = {
         "Eg": float(bandgap_ev),
-        "Voc": float(voc),
+        "Voc": float(voc),  
         "Jsc": float(jsc),
         "Jsc_SQ": float(jsc_sq),
         "J0_SQ": float(j0_sq),
@@ -758,7 +687,7 @@ with st.sidebar:
 st.markdown(
     f"""
     <div class="hero">
-        <h1>☀️ Photovoltaic Parameters Calculator</h1>
+        <h1>☀️ EQE & Photovoltaic Voltage-Loss Analysis</h1>
         <p>Upload EQE once, then choose Jsc or voltage-loss analysis from the taskbar.</p>
     </div>
     """,
